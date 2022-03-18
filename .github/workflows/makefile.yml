@@ -1,0 +1,39 @@
+name: Makefile CI
+
+on:
+  push:
+    tags:
+    - 'v*'
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: install php dev
+      run: sudo apt upgrade && sudo apt install -y php8.1-dev tree
+    
+    - name: get libmaxminddb
+      run: wget https://github.com/maxmind/libmaxminddb/releases/download/1.6.0/libmaxminddb-1.6.0.tar.gz && tar xzf libmaxminddb-1.6.0.tar.gz
+      
+    - name: Compile and install
+      run: cd libmaxminddb-1.6.0 && ./configure && make && sudo make install
+      
+    - name: Get PHP ext
+      run: git clone https://github.com/maxmind/MaxMind-DB-Reader-php.git
+      
+    - name: Compile
+      run: cd MaxMind-DB-Reader-php/ext && phpize && ./configure && make && tree && sudo make install
+      
+    - name: Create archive
+      run: cd MaxMind-DB-Reader-php/ext/modules && tar -czf maxminddb-${GITHUB_REF_NAME}.tar.gz maxminddb.so
+      
+    - name: Release with Notes
+      uses: softprops/action-gh-release@v1
+      with:
+        files: MaxMind-DB-Reader-php/ext/modules/maxminddb-${{ github.ref_name }}.tar.gz
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
