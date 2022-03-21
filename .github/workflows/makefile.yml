@@ -12,15 +12,20 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+
+    - name: define versions
+      run: |
+        echo "PHP_VERSION=8.1" >> $GITHUB_ENV
+        echo "MAXMINDDB_VERSION=1.6.0" >> $GITHUB_ENV
     
     - name: install php dev
-      run: sudo apt upgrade && sudo apt install -y php8.1-dev tree
+      run: sudo apt upgrade && sudo apt install -y php${PHP_VERSION}-dev tree
     
     - name: get libmaxminddb
-      run: wget https://github.com/maxmind/libmaxminddb/releases/download/1.6.0/libmaxminddb-1.6.0.tar.gz && tar xzf libmaxminddb-1.6.0.tar.gz
+      run: wget https://github.com/maxmind/libmaxminddb/releases/download/${MAXMINDDB_VERSION}/libmaxminddb-${MAXMINDDB_VERSION}.tar.gz && tar xzf libmaxminddb-${MAXMINDDB_VERSION}.tar.gz
       
     - name: Compile and install
-      run: cd libmaxminddb-1.6.0 && ./configure && make && sudo make install
+      run: cd libmaxminddb-${MAXMINDDB_VERSION} && ./configure && make && sudo make install
       
     - name: Get PHP ext
       run: git clone https://github.com/maxmind/MaxMind-DB-Reader-php.git
@@ -29,11 +34,11 @@ jobs:
       run: cd MaxMind-DB-Reader-php/ext && phpize && ./configure && make && tree && sudo make install
       
     - name: Create archive
-      run: cd MaxMind-DB-Reader-php/ext/modules && tar -czf maxminddb-${GITHUB_REF_NAME}.tar.gz maxminddb.so
+      run: cd MaxMind-DB-Reader-php/ext/modules && tar -czf maxminddb-${PHP_VERSION}-${MAXMINDDB_VERSION}-${GITHUB_REF_NAME}.tar.gz maxminddb.so
       
     - name: Release with Notes
       uses: softprops/action-gh-release@v1
       with:
-        files: MaxMind-DB-Reader-php/ext/modules/maxminddb-${{ github.ref_name }}.tar.gz
+        files: MaxMind-DB-Reader-php/ext/modules/maxminddb-*-${{ github.ref_name }}.tar.gz
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
