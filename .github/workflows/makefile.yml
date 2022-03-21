@@ -35,10 +35,15 @@ jobs:
       
     - name: Create archive
       run: cd MaxMind-DB-Reader-php/ext/modules && tar -czf maxminddb-${PHP_VERSION}-${MAXMINDDB_VERSION}-${GITHUB_REF_NAME}.tar.gz maxminddb.so
+
+    - name: Create checksum
+      run: cd MaxMind-DB-Reader-php/ext/modules && sha256sum maxminddb-${PHP_VERSION}-${MAXMINDDB_VERSION}-${GITHUB_REF_NAME}.tar.gz > sha256sums
       
     - name: Release with Notes
       uses: softprops/action-gh-release@v1
       with:
-        files: MaxMind-DB-Reader-php/ext/modules/maxminddb-*-${{ github.ref_name }}.tar.gz
+        files: |
+          MaxMind-DB-Reader-php/ext/modules/maxminddb-*-${{ github.ref_name }}.tar.gz
+          MaxMind-DB-Reader-php/ext/modules/sha256sums
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
